@@ -4,15 +4,26 @@ import React from 'react';
 interface PrimaryButtonProps {
     children: React.ReactNode;
     onPress: () => void;
+    backgroundColor?: string;
+    textColor?: string;
 }
 
-function PrimaryButton({ children, onPress }: PrimaryButtonProps): React.JSX.Element {
+function PrimaryButton({
+    children,
+    onPress,
+    backgroundColor = 'white',
+    textColor = 'white'
+}: PrimaryButtonProps): React.JSX.Element {
     return (
         <View style={styles.primaryButtonOuters}>
-            <Pressable style={styles.primaryButton}
-                android_ripple={{ color: 'red' }}
-                onPress={onPress} >
-                <Text style={styles.textButton}>{children}</Text>
+            <Pressable
+                style={[styles.primaryButton, { backgroundColor }]}
+                android_ripple={{ color: textColor }}
+                onPress={onPress}
+            >
+                <Text style={[styles.textButton]}>
+                    {children}
+                </Text>
             </Pressable>
         </View>
     );
@@ -31,12 +42,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderRadius: 50,
         borderWidth: 2,
-        borderColor: 'black',
+        borderColor: 'white',
+        // backgroundColor: 'white',
+        opacity: 0.5,
     },
     textButton: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: 'black',
+        color: 'white',
     }
 });
 

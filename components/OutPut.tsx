@@ -18,7 +18,7 @@ const styles = StyleSheet.create({
     titleText: {
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'lightgray',
+        // backgroundColor: 'lightgray',
         padding: 10,
         marginTop: 10,
         marginHorizontal: 30,
@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
     fortTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: 'black',
+        color: 'white',
     }
 });
 
