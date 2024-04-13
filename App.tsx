@@ -1,118 +1,138 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { View, Text, StyleSheet, FlatList } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+import PrimaryButton from './components/PrimaryButton';
+import OutPut from './components/OutPut';
 
 function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+  const [time, setTime] = useState(0);
+  const [running, setRunning] = useState(false);
+  const [paused, setPaused] = useState(false);
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const initialTimeRef = useRef(0); // Thời điểm ban đầu của stopwatch
+
+
+  const [listTimeLap, setListTimeLap] = useState<number[]>([]);
+
+  const [lastLapTime, setLastLapTime] = useState(0);
+
+  const lapStopWatch = useMemo(() => {
+    return () => {
+      const currentTime = Date.now();
+      const lapTime = currentTime - lastLapTime;
+      setListTimeLap(listTimeLap => [lapTime, ...listTimeLap]);
+      setLastLapTime(currentTime);
+    };
+  }, [lastLapTime, setListTimeLap, setLastLapTime]);
+
+  const getCurrentGuesslength = listTimeLap.length;
+
+  const startStopwatch = useCallback(() => {
+    if (!running) {
+      if (paused) {
+        initialTimeRef.current = Date.now() - time;
+      } else {
+        initialTimeRef.current = Date.now();
+      }
+      intervalRef.current = setInterval(() => {
+        setTime(Date.now() - initialTimeRef.current);
+      }, 1);
+
+      setRunning(true);
+      setPaused(false);
+      setLastLapTime(Date.now());
+    }
+  }, [running, paused, time]);
+
+
+  const stopStopwatch = () => {
+    clearInterval(intervalRef.current as NodeJS.Timeout);
+    setRunning(false);
+    setPaused(true);
   };
 
+  const formatTime = (milliseconds: number) => {
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    const millisecondsRemaining = Math.floor((milliseconds % 1000) / 10); // Lấy hai chữ số cuối cùng
+    return `${minutes.toString().padStart(2, '0')}:${seconds
+      .toString()
+      .padStart(2, '0')},${millisecondsRemaining.toString().padStart(2, '0')}`; // Sử dụng hai chữ số
+  };
+
+
+
+  const resetStopwatch = () => {
+    clearInterval(intervalRef.current as NodeJS.Timeout);
+    setTime(0);
+    setRunning(false);
+    setPaused(false);
+    setListTimeLap([]);
+
+  };
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <View >
+      <View>
+        <Text style={styles.textTime}>{formatTime(time)}</Text>
+      </View>
+      <View style={styles.buttonPrimary}>
+        {(running && !paused) ? (
+          <>
+            <PrimaryButton onPress={lapStopWatch}>Lap</PrimaryButton>
+            <PrimaryButton onPress={stopStopwatch}>Stop</PrimaryButton>
+          </>
+        ) : (paused) ? (
+          <>
+            <PrimaryButton onPress={resetStopwatch}>Reset</PrimaryButton>
+            <PrimaryButton onPress={startStopwatch}>Start</PrimaryButton>
+          </>
+        ) : (
+          <>
+            <PrimaryButton onPress={lapStopWatch}>Lap</PrimaryButton>
+            <PrimaryButton onPress={startStopwatch}>Start</PrimaryButton>
+          </>
+        )}
+      </View>
+
+
+
+      <View >
+        <FlatList
+          data={listTimeLap}
+          renderItem={(itemdata: any) => (
+            <OutPut>#{getCurrentGuesslength - itemdata.index}--{formatTime(itemdata.item)}</OutPut>
+          )}
+          keyExtractor={(item, index) => `recipe-${index}`}
+        />
+      </View>
+
+
+
+    </View >
   );
 }
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  textTime: {
+    fontSize: 60,
+    fontWeight: 'bold',
+    color: 'white',
+    textAlign: 'center',
+    marginTop: 50,
+
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  buttonPrimary: {
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginTop: 100,
+    borderRadius: 50,
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
+
 });
 
 export default App;
