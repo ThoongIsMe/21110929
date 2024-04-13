@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, VirtualizedList } from 'react-native';
 import PrimaryButton from './components/PrimaryButton';
 import OutPut from './components/OutPut';
 
@@ -18,9 +18,9 @@ function App(): React.JSX.Element {
   const lapStopWatch = useCallback(() => {
     const currentTime = Date.now();
     const lapTime = currentTime - lastLapTime;
-    setListTimeLap(listTimeLap => [lapTime, ...listTimeLap]);
+    setListTimeLap(prevListTimeLap => [lapTime, ...prevListTimeLap]);
     setLastLapTime(currentTime);
-  }, [lastLapTime, setListTimeLap, setLastLapTime]);
+  }, [lastLapTime]);
 
   const startStopwatch = useCallback(() => {
     if (!running) {
@@ -55,7 +55,7 @@ function App(): React.JSX.Element {
     setButtonColor('green');
   };
 
-  const formatTime = (milliseconds: number) => {
+  const formatTime = useCallback((milliseconds: number) => {
     const totalSeconds = Math.floor(milliseconds / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
@@ -63,7 +63,8 @@ function App(): React.JSX.Element {
     return `${minutes.toString().padStart(2, '0')}:${seconds
       .toString()
       .padStart(2, '0')},${millisecondsRemaining.toString().padStart(2, '0')}`;
-  };
+  }, []);
+
 
   const getCurrentGuesslength = listTimeLap.length;
 
@@ -110,16 +111,28 @@ function App(): React.JSX.Element {
         )}
       </View>
       <View>
-        <FlatList
-          data={listTimeLap}
-          renderItem={(itemdata: any) => (
-            <OutPut>
-              Lap {getCurrentGuesslength - itemdata.index}                           {formatTime(itemdata.item)}
-            </OutPut>
-          )}
-          keyExtractor={(item, index) => `recipe-${index}`}
-        />
+        <View>
+          <VirtualizedList
+            data={listTimeLap}
+            renderItem={(itemdata: any) => (
+              <OutPut textColor={
+                itemdata.item === Math.max(...listTimeLap) ? 'red' :
+                  itemdata.item === Math.min(...listTimeLap) ? 'green' : undefined
+              }>
+                Lap {getCurrentGuesslength - itemdata.index} {formatTime(itemdata.item)}
+              </OutPut>
+            )}
+            getItemCount={() => listTimeLap.length}
+            getItem={(data, index) => data[index]}
+            keyExtractor={(item, index) => `recipe-${index}`}
+            initialNumToRender={10}
+            windowSize={5}
+          />
+        </View>
+
       </View>
+
+
     </View>
   );
 }
