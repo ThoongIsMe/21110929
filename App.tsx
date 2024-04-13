@@ -119,7 +119,7 @@ function App(): React.JSX.Element {
                 itemdata.item === Math.max(...listTimeLap) ? 'red' :
                   itemdata.item === Math.min(...listTimeLap) ? 'green' : undefined
               }>
-                Lap {getCurrentGuesslength - itemdata.index} {formatTime(itemdata.item)}
+                Lap {getCurrentGuesslength - itemdata.index}                            {formatTime(itemdata.item)}
               </OutPut>
             )}
             getItemCount={() => listTimeLap.length}
